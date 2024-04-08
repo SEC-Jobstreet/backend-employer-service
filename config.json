@@ -1,0 +1,6 @@
+{
+    "ENVIRONMENT": "development",
+    "RESTfulServerAddress": "0.0.0.0:4000",
+    "DB_SOURCE": "postgresql://admin:admin@localhost:5432/employer_service_jobstreet?sslmode=disable",
+    "MIGRATION_URL": "file://db/migration"
+}

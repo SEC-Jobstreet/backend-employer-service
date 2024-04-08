@@ -1,0 +1,157 @@
+basePath: /api/v1
+definitions:
+  api.applyRequest:
+    properties:
+      candidate_id:
+        type: integer
+      job_id:
+        type: integer
+    required:
+    - candidate_id
+    - job_id
+    type: object
+  api.applyResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  api.updateStatusRequest:
+    properties:
+      application_id:
+        type: integer
+      message:
+        type: string
+      status:
+        type: string
+    required:
+    - application_id
+    - status
+    type: object
+  db.Application:
+    properties:
+      candidate_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      job_id:
+        type: integer
+      message:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+host: localhost:4000
+info:
+  contact: {}
+  description: This is a Application Service Server.
+  title: Application Service API
+  version: "1.0"
+paths:
+  /application/{application_id}:
+    get:
+      consumes:
+      - application/json
+      description: get application by id
+      parameters:
+      - description: Application ID
+        in: path
+        name: application_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Application'
+      summary: Get Application
+      tags:
+      - application
+  /application_list:
+    get:
+      consumes:
+      - application/json
+      description: get Applications
+      parameters:
+      - in: query
+        name: candidate_id
+        type: integer
+      - in: query
+        name: job_id
+        type: integer
+      - in: query
+        minimum: 1
+        name: page_id
+        required: true
+        type: integer
+      - in: query
+        maximum: 20
+        minimum: 10
+        name: page_size
+        required: true
+        type: integer
+      - in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Application'
+            type: array
+      summary: List Applications
+      tags:
+      - application
+  /apply_job:
+    post:
+      consumes:
+      - application/json
+      description: Candidate applies job
+      parameters:
+      - description: Apply Job
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.applyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.applyResponse'
+      summary: Apply Job
+      tags:
+      - application
+  /update_status:
+    put:
+      consumes:
+      - application/json
+      description: Update status of application
+      parameters:
+      - description: update status by id
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.updateStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Application'
+      summary: Update tags
+      tags:
+      - application
+swagger: "2.0"

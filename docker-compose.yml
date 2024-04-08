@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:13.12
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=employer_service_jobstreet
+    volumes:
+      - employer-service-prod-data-volume:/var/lib/postgresql/data
+    networks:
+      - employer-network
+    ports:
+      - 5432:5432
+    user: postgres
+
+  employer_service:
+    container_name: backend-jobstreet-employer-service-prod-container
+    image: thanhquy1105/backend-jobstreet-employer-service-prod
+    build:
+      context: .
+      target: production
+    environment:
+      - ENVIRONMENT=production
+      - HOST=0.0.0.0
+      - DB_SOURCE=postgresql://admin:admin@postgres:5432/employer_service_jobstreet?sslmode=disable
+    ports:
+      - 4000:4000
+    depends_on:
+      - postgres
+    networks:
+      - employer-network
+    restart: on-failure
+    command: [ "/app/main" ]
+
+networks:
+  employer-network:
+
+volumes:
+  employer-service-prod-data-volume:
+
