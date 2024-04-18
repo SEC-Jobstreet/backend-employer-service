@@ -6,6 +6,8 @@ package db
 
 import (
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Application struct {
@@ -16,4 +18,32 @@ type Application struct {
 	Message     string    `json:"message"`
 	UpdatedAt   time.Time `json:"updated_at"`
 	CreatedAt   time.Time `json:"created_at"`
+}
+
+type EmployerProfile struct {
+	ID           int64       `json:"id"`
+	EnterpriseID int64       `json:"enterprise_id"`
+	Email        string      `json:"email"`
+	FirstName    string      `json:"first_name"`
+	LastName     string      `json:"last_name"`
+	Phone        pgtype.Text `json:"phone"`
+	Address      pgtype.Text `json:"address"`
+	UpdatedAt    time.Time   `json:"updated_at"`
+	CreatedAt    time.Time   `json:"created_at"`
+}
+
+type Enterprise struct {
+	ID          int64         `json:"id"`
+	EmployerID  pgtype.Int8   `json:"employer_id"`
+	Name        string        `json:"name"`
+	Country     pgtype.Text   `json:"country"`
+	LocationLat pgtype.Float8 `json:"location_lat"`
+	LocationLon pgtype.Float8 `json:"location_lon"`
+	Field       pgtype.Text   `json:"field"`
+	Size        pgtype.Text   `json:"size"`
+	Role        pgtype.Text   `json:"role"`
+	Url         pgtype.Text   `json:"url"`
+	Gpkd        pgtype.Text   `json:"gpkd"`
+	UpdatedAt   time.Time     `json:"updated_at"`
+	CreatedAt   time.Time     `json:"created_at"`
 }

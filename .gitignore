@@ -21,3 +21,6 @@
 go.work
 realconfig.json
 *.exe
+
+# dotenv
+.env
