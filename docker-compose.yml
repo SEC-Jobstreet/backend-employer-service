@@ -12,8 +12,6 @@ services:
       - employer-service-prod-data-volume:/var/lib/postgresql/data
     networks:
       - employer-network
-    ports:
-      - 5432:5432
     user: postgres
 
   employer_service:
@@ -26,6 +24,8 @@ services:
       - ENVIRONMENT=production
       - HOST=0.0.0.0
       - DB_SOURCE=postgresql://admin:admin@postgres:5432/employer_service_jobstreet?sslmode=disable
+    env_file:
+      - .env
     ports:
       - 4000:4000
     depends_on:

@@ -2,6 +2,8 @@ package utils
 
 import (
 	"github.com/spf13/viper"
+
+	"github.com/joho/godotenv"
 )
 
 // Config stores all configuration of the application.
@@ -17,6 +19,11 @@ type Config struct {
 
 // LoadConfig reads configuration from file or environment variable.
 func LoadConfig(path string) (config Config, err error) {
+	err = godotenv.Load()
+	if err != nil {
+		return
+	}
+
 	viper.AddConfigPath(path)
 	viper.SetConfigName("config")
 	viper.SetConfigType("json")

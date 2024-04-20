@@ -2,5 +2,7 @@
     "ENVIRONMENT": "development",
     "RESTfulServerAddress": "0.0.0.0:4000",
     "DB_SOURCE": "postgresql://admin:admin@localhost:5432/employer_service_jobstreet?sslmode=disable",
-    "MIGRATION_URL": "file://db/migration"
+    "MIGRATION_URL": "file://db/migration",
+    "COGNITO_CLIENT_ID": "27qr5vcjamku7t7jle3lg7poc8",
+    "COGNITO_CLIENT_SECRET": "7s9hfsbb485nji2lfe0t31dr36d0el45ceqrcmcr0cmrg7s2qn6"
 }

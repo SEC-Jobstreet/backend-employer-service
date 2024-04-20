@@ -6,14 +6,38 @@ package db
 
 import (
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Application struct {
-	ID          int64     `json:"id"`
-	CandidateID int64     `json:"candidate_id"`
-	JobID       int64     `json:"job_id"`
-	Status      string    `json:"status"`
-	Message     string    `json:"message"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	CreatedAt   time.Time `json:"created_at"`
+type EmployerEnterprise struct {
+	EmployerID   int64 `json:"employer_id"`
+	EnterpriseID int64 `json:"enterprise_id"`
+}
+
+type EmployerProfile struct {
+	ID             int64     `json:"id"`
+	Email          string    `json:"email"`
+	FirstName      string    `json:"first_name"`
+	LastName       string    `json:"last_name"`
+	Phone          string    `json:"phone"`
+	Address        string    `json:"address"`
+	EmailConfirmed bool      `json:"email_confirmed"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+type Enterprise struct {
+	ID          int64         `json:"id"`
+	Name        string        `json:"name"`
+	Country     pgtype.Text   `json:"country"`
+	LocationLat pgtype.Float8 `json:"location_lat"`
+	LocationLon pgtype.Float8 `json:"location_lon"`
+	Field       pgtype.Text   `json:"field"`
+	Size        pgtype.Text   `json:"size"`
+	Role        pgtype.Text   `json:"role"`
+	Url         pgtype.Text   `json:"url"`
+	Gpkd        pgtype.Text   `json:"gpkd"`
+	UpdatedAt   time.Time     `json:"updated_at"`
+	CreatedAt   time.Time     `json:"created_at"`
 }
