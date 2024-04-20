@@ -10,31 +10,25 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Application struct {
-	ID          int64     `json:"id"`
-	CandidateID int64     `json:"candidate_id"`
-	JobID       int64     `json:"job_id"`
-	Status      string    `json:"status"`
-	Message     string    `json:"message"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	CreatedAt   time.Time `json:"created_at"`
+type EmployerEnterprise struct {
+	EmployerID   int64 `json:"employer_id"`
+	EnterpriseID int64 `json:"enterprise_id"`
 }
 
 type EmployerProfile struct {
-	ID           int64       `json:"id"`
-	EnterpriseID int64       `json:"enterprise_id"`
-	Email        string      `json:"email"`
-	FirstName    string      `json:"first_name"`
-	LastName     string      `json:"last_name"`
-	Phone        pgtype.Text `json:"phone"`
-	Address      pgtype.Text `json:"address"`
-	UpdatedAt    time.Time   `json:"updated_at"`
-	CreatedAt    time.Time   `json:"created_at"`
+	ID             int64     `json:"id"`
+	Email          string    `json:"email"`
+	FirstName      string    `json:"first_name"`
+	LastName       string    `json:"last_name"`
+	Phone          string    `json:"phone"`
+	Address        string    `json:"address"`
+	EmailConfirmed bool      `json:"email_confirmed"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 type Enterprise struct {
 	ID          int64         `json:"id"`
-	EmployerID  pgtype.Int8   `json:"employer_id"`
 	Name        string        `json:"name"`
 	Country     pgtype.Text   `json:"country"`
 	LocationLat pgtype.Float8 `json:"location_lat"`

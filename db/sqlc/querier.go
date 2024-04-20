@@ -9,16 +9,14 @@ import (
 )
 
 type Querier interface {
-	CreateApplication(ctx context.Context, arg CreateApplicationParams) (Application, error)
+	AssociateEmployerWithEnterprise(ctx context.Context, arg AssociateEmployerWithEnterpriseParams) error
 	// Optional pagination
 	CreateEmployerProfile(ctx context.Context, arg CreateEmployerProfileParams) (EmployerProfile, error)
-	GetApplication(ctx context.Context, id int64) (Application, error)
 	GetEmployerOne(ctx context.Context, id int64) (EmployerProfile, error)
 	GetEmployerProfileByEnterpriseID(ctx context.Context, enterpriseID int64) (EmployerProfile, error)
-	ListApplications(ctx context.Context, arg ListApplicationsParams) ([]Application, error)
 	ListEmployerProfiles(ctx context.Context, arg ListEmployerProfilesParams) ([]EmployerProfile, error)
+	UpdateEmailConfirmed(ctx context.Context, email string) error
 	UpdateEmployerProfile(ctx context.Context, arg UpdateEmployerProfileParams) (EmployerProfile, error)
-	UpdateStatusApplication(ctx context.Context, arg UpdateStatusApplicationParams) (Application, error)
 }
 
 var _ Querier = (*Queries)(nil)

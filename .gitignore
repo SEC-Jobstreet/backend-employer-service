@@ -24,3 +24,5 @@ realconfig.json
 
 # dotenv
 .env
+
+config-me.json

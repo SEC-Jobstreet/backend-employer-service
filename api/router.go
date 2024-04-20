@@ -1,6 +1,7 @@
 package api
 
 import (
+	"os"
 	"time"
 
 	"github.com/SEC-Jobstreet/backend-employer-service/api/middleware"
@@ -25,9 +26,16 @@ func (s *Server) setupRouter() {
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	authRoutes := router.Group("/api/v1").Use(middleware.IsAuthorizedJWT(&s.config))
+	authRoutes := router.Group("/api/v1/authentications")
 
-	authRoutes.POST("/apply_job", s.example)
+	authRoutes.POST("/sign_up", s.signUp)
+	authRoutes.POST("/confirm_email", s.confirmSignUp)
+	authRoutes.POST("/login", s.login)
+
+	protectedRoutes := router.Group("/protected")
+	protectedRoutes.Use(middleware.CognitoAuthMiddleware(os.Getenv("COGNITO_JWKS_URL")))
+
+	protectedRoutes.POST("/test")
 
 	s.router = router
 }

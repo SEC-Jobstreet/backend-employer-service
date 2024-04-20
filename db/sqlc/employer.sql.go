@@ -7,14 +7,30 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const associateEmployerWithEnterprise = `-- name: AssociateEmployerWithEnterprise :exec
+INSERT INTO employer_enterprise (
+    employer_id,
+    enterprise_id
+) VALUES (
+    $1, $2
+)
+`
+
+type AssociateEmployerWithEnterpriseParams struct {
+	EmployerID   int64 `json:"employer_id"`
+	EnterpriseID int64 `json:"enterprise_id"`
+}
+
+func (q *Queries) AssociateEmployerWithEnterprise(ctx context.Context, arg AssociateEmployerWithEnterpriseParams) error {
+	_, err := q.db.Exec(ctx, associateEmployerWithEnterprise, arg.EmployerID, arg.EnterpriseID)
+	return err
+}
 
 const createEmployerProfile = `-- name: CreateEmployerProfile :one
 
 INSERT INTO employer_profile (
-  enterprise_id,
   email,
   first_name,
   last_name,
@@ -22,24 +38,22 @@ INSERT INTO employer_profile (
   address
 )
 VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5
 )
-RETURNING id, enterprise_id, email, first_name, last_name, phone, address, updated_at, created_at
+RETURNING id, email, first_name, last_name, phone, address, email_confirmed, updated_at, created_at
 `
 
 type CreateEmployerProfileParams struct {
-	EnterpriseID int64       `json:"enterprise_id"`
-	Email        string      `json:"email"`
-	FirstName    string      `json:"first_name"`
-	LastName     string      `json:"last_name"`
-	Phone        pgtype.Text `json:"phone"`
-	Address      pgtype.Text `json:"address"`
+	Email     string `json:"email"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Phone     string `json:"phone"`
+	Address   string `json:"address"`
 }
 
 // Optional pagination
 func (q *Queries) CreateEmployerProfile(ctx context.Context, arg CreateEmployerProfileParams) (EmployerProfile, error) {
 	row := q.db.QueryRow(ctx, createEmployerProfile,
-		arg.EnterpriseID,
 		arg.Email,
 		arg.FirstName,
 		arg.LastName,
@@ -49,12 +63,12 @@ func (q *Queries) CreateEmployerProfile(ctx context.Context, arg CreateEmployerP
 	var i EmployerProfile
 	err := row.Scan(
 		&i.ID,
-		&i.EnterpriseID,
 		&i.Email,
 		&i.FirstName,
 		&i.LastName,
 		&i.Phone,
 		&i.Address,
+		&i.EmailConfirmed,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
@@ -62,7 +76,7 @@ func (q *Queries) CreateEmployerProfile(ctx context.Context, arg CreateEmployerP
 }
 
 const getEmployerOne = `-- name: GetEmployerOne :one
-SELECT id, enterprise_id, email, first_name, last_name, phone, address, updated_at, created_at FROM employer_profile
+SELECT id, email, first_name, last_name, phone, address, email_confirmed, updated_at, created_at FROM employer_profile
 WHERE id = $1 LIMIT 1
 `
 
@@ -71,12 +85,12 @@ func (q *Queries) GetEmployerOne(ctx context.Context, id int64) (EmployerProfile
 	var i EmployerProfile
 	err := row.Scan(
 		&i.ID,
-		&i.EnterpriseID,
 		&i.Email,
 		&i.FirstName,
 		&i.LastName,
 		&i.Phone,
 		&i.Address,
+		&i.EmailConfirmed,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
@@ -84,9 +98,10 @@ func (q *Queries) GetEmployerOne(ctx context.Context, id int64) (EmployerProfile
 }
 
 const getEmployerProfileByEnterpriseID = `-- name: GetEmployerProfileByEnterpriseID :one
-SELECT id, enterprise_id, email, first_name, last_name, phone, address, updated_at, created_at FROM employer_profile
-WHERE enterprise_id = $1
-LIMIT 1
+SELECT employer_profile.id, employer_profile.email, employer_profile.first_name, employer_profile.last_name, employer_profile.phone, employer_profile.address, employer_profile.email_confirmed, employer_profile.updated_at, employer_profile.created_at 
+FROM employer_profile
+JOIN employer_enterprise ON employer_profile.id = employer_enterprise.employer_id
+WHERE employer_enterprise.enterprise_id = $1
 `
 
 func (q *Queries) GetEmployerProfileByEnterpriseID(ctx context.Context, enterpriseID int64) (EmployerProfile, error) {
@@ -94,12 +109,12 @@ func (q *Queries) GetEmployerProfileByEnterpriseID(ctx context.Context, enterpri
 	var i EmployerProfile
 	err := row.Scan(
 		&i.ID,
-		&i.EnterpriseID,
 		&i.Email,
 		&i.FirstName,
 		&i.LastName,
 		&i.Phone,
 		&i.Address,
+		&i.EmailConfirmed,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
@@ -107,7 +122,7 @@ func (q *Queries) GetEmployerProfileByEnterpriseID(ctx context.Context, enterpri
 }
 
 const listEmployerProfiles = `-- name: ListEmployerProfiles :many
-SELECT id, enterprise_id, email, first_name, last_name, phone, address, updated_at, created_at FROM employer_profile
+SELECT id, email, first_name, last_name, phone, address, email_confirmed, updated_at, created_at FROM employer_profile
 ORDER BY id
 LIMIT $1 OFFSET $2
 `
@@ -128,12 +143,12 @@ func (q *Queries) ListEmployerProfiles(ctx context.Context, arg ListEmployerProf
 		var i EmployerProfile
 		if err := rows.Scan(
 			&i.ID,
-			&i.EnterpriseID,
 			&i.Email,
 			&i.FirstName,
 			&i.LastName,
 			&i.Phone,
 			&i.Address,
+			&i.EmailConfirmed,
 			&i.UpdatedAt,
 			&i.CreatedAt,
 		); err != nil {
@@ -147,34 +162,43 @@ func (q *Queries) ListEmployerProfiles(ctx context.Context, arg ListEmployerProf
 	return items, nil
 }
 
+const updateEmailConfirmed = `-- name: UpdateEmailConfirmed :exec
+UPDATE employer_profile
+SET email_confirmed = true
+WHERE email = $1
+RETURNING employer_profile.email
+`
+
+func (q *Queries) UpdateEmailConfirmed(ctx context.Context, email string) error {
+	_, err := q.db.Exec(ctx, updateEmailConfirmed, email)
+	return err
+}
+
 const updateEmployerProfile = `-- name: UpdateEmployerProfile :one
 UPDATE employer_profile
 SET
-  enterprise_id = $1,
-  email = $2,
-  first_name = $3,
-  last_name = $4,
-  phone = $5,
-  address = $6,
+  email = $1,
+  first_name = $2,
+  last_name = $3,
+  phone = $4,
+  address = $5,
   updated_at = CURRENT_TIMESTAMP
 WHERE
-  id = $7
-RETURNING id, enterprise_id, email, first_name, last_name, phone, address, updated_at, created_at
+  id = $6
+RETURNING id, email, first_name, last_name, phone, address, email_confirmed, updated_at, created_at
 `
 
 type UpdateEmployerProfileParams struct {
-	EnterpriseID int64       `json:"enterprise_id"`
-	Email        string      `json:"email"`
-	FirstName    string      `json:"first_name"`
-	LastName     string      `json:"last_name"`
-	Phone        pgtype.Text `json:"phone"`
-	Address      pgtype.Text `json:"address"`
-	ID           int64       `json:"id"`
+	Email     string `json:"email"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Phone     string `json:"phone"`
+	Address   string `json:"address"`
+	ID        int64  `json:"id"`
 }
 
 func (q *Queries) UpdateEmployerProfile(ctx context.Context, arg UpdateEmployerProfileParams) (EmployerProfile, error) {
 	row := q.db.QueryRow(ctx, updateEmployerProfile,
-		arg.EnterpriseID,
 		arg.Email,
 		arg.FirstName,
 		arg.LastName,
@@ -185,12 +209,12 @@ func (q *Queries) UpdateEmployerProfile(ctx context.Context, arg UpdateEmployerP
 	var i EmployerProfile
 	err := row.Scan(
 		&i.ID,
-		&i.EnterpriseID,
 		&i.Email,
 		&i.FirstName,
 		&i.LastName,
 		&i.Phone,
 		&i.Address,
+		&i.EmailConfirmed,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
