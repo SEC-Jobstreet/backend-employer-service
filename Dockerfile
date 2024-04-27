@@ -25,6 +25,6 @@ COPY config.json .
 COPY db/migration ./db/migration
 
 # Expose port
-EXPOSE 4000
+EXPOSE 4001
 # Exec built binary
 CMD [ "/app/main" ]

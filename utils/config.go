@@ -10,9 +10,8 @@ type Config struct {
 	Environment          string `mapstructure:"ENVIRONMENT"`
 	RESTfulServerAddress string `mapstructure:"RESTfulServerAddress"`
 	DBSource             string `mapstructure:"DB_SOURCE"`
-	MigrationURL         string `mapstructure:"MIGRATION_URL"`
-	GRPCServerAddress    string `mapstructure:"GRPCServerAddress"`
-	HTTPServerAddress    string `mapstructure:"HTTPServerAddress"`
+	CognitoRegion        string `mapstructure:"COGNITO_REGION"`
+	CognitoUserPoolID    string `mapstructure:"COGNITO_USER_POOL_ID"`
 }
 
 // LoadConfig reads configuration from file or environment variable.
