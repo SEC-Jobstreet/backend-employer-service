@@ -25,6 +25,7 @@ type enterpriseCreationRequest struct {
 	Url       string `json:"url"`
 	License   string `json:"license"`
 
+	EmployerId   string `json:"employer_id" binding:"required"`
 	EmployerRole string `json:"employer_role" binding:"required"`
 }
 
@@ -32,12 +33,6 @@ func (s *Server) CreateEnterprise(ctx *gin.Context) {
 
 	var request enterpriseCreationRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
-		return
-	}
-
-	currentUser, err := utils.GetCurrentUser(ctx)
-	if err != nil {
 		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
 		return
 	}
@@ -59,7 +54,7 @@ func (s *Server) CreateEnterprise(ctx *gin.Context) {
 		Size:      request.Size,
 		Url:       request.Url,
 
-		EmployerID:   currentUser.Username,
+		EmployerID:   request.EmployerId,
 		EmployerRole: request.EmployerRole,
 	}
 	s.store.Create(enterprise)
