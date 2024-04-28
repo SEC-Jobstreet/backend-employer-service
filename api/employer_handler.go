@@ -82,7 +82,7 @@ func (s *Server) GetEnterpriseByEmployer(ctx *gin.Context) {
 }
 
 type enterpriseIdRequest struct {
-	EnterpriseID uuid.UUID `uri:"id" binding:"required"`
+	EnterpriseID string `uri:"id" binding:"required"`
 }
 
 func (s *Server) GetEnterpriseByID(ctx *gin.Context) {
@@ -92,11 +92,15 @@ func (s *Server) GetEnterpriseByID(ctx *gin.Context) {
 		return
 	}
 
+	id, err := uuid.Parse(request.EnterpriseID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
 	enterprise := &models.Enterprises{}
 
-	s.store.Where("id = ?", request.EnterpriseID).Find(enterprise)
+	s.store.Where("id = ?", id).Find(enterprise)
 
 	ctx.JSON(http.StatusOK, enterprise)
 }
-
-// 	authRoutes.GET("/get_enterprise_by_id", middleware.AuthMiddleware(s.config, []string{"employers"}), s.example)

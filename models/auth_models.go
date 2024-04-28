@@ -1,16 +1,16 @@
 package models
 
 type AuthClaim struct {
-	Sub           string   `json:"sub"`
-	CognitoGroups []string `json:"cognito:groups"`
-	Iss           string   `json:"iss"`
-	Version       int      `json:"version"`
-	ClientId      string   `json:"client_id"`
-	TokenUse      string   `json:"token_use"`
-	Scope         string   `json:"scope"`
-	AuthTime      int      `json:"auth_time"`
-	Exp           int      `json:"exp"`
-	Iat           int      `json:"iat"`
-	Jti           string   `json:"jti"`
-	Username      string   `json:"username"`
+	Sub           string   `mapstructure:"sub"`
+	CognitoGroups []string `mapstructure:"cognito:groups"`
+	Iss           string   `mapstructure:"iss"`
+	Version       int      `mapstructure:"version"`
+	ClientId      string   `mapstructure:"client_id"`
+	TokenUse      string   `mapstructure:"token_use"`
+	Scope         string   `mapstructure:"scope"`
+	AuthTime      int      `mapstructure:"auth_time"`
+	Exp           int      `mapstructure:"exp"`
+	Iat           int      `mapstructure:"iat"`
+	Jti           string   `mapstructure:"jti"`
+	Username      string   `mapstructure:"username"`
 }

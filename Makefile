@@ -18,8 +18,8 @@ new_migrate:
 
 # run postgres container with network 
 run_postgres:
-	-docker network create employer-network
-	docker run --name postgres --network employer-network -p 5432:5432 -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin -d postgres:13.12 
+	-docker network create jobstreet-network
+	docker run --name postgres --network jobstreet-network -p 5432:5432 -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin -d postgres:13.12 
 
 start_postgres:
 	docker start postgres
@@ -28,7 +28,7 @@ build_app:
 	docker build -t thanhquy1105/backend-jobstreet-employer-service-prod:latest .
 
 run_app:
-	docker run --name backend-jobstreet-employer-service-prod --network employer-network -p 4001:4001 -e DB_SOURCE="postgresql://admin:admin@postgres:5432/employer_service_jobstreet?sslmode=disable" thanhquy1105/backend-jobstreet-employer-service-prod:latest
+	docker run --name backend-jobstreet-employer-service-prod --network jobstreet-network -p 4001:4001 -e DB_SOURCE="postgresql://admin:admin@postgres:5432/employer_service_jobstreet?sslmode=disable" thanhquy1105/backend-jobstreet-employer-service-prod:latest
 
 start_app:
 	docker start backend-jobstreet-employer-service-prod

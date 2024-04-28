@@ -22,7 +22,6 @@ RUN apk add --no-cache ca-certificates
 COPY --from=builder /app/main .
 
 COPY config.json .
-COPY db/migration ./db/migration
 
 # Expose port
 EXPOSE 4001

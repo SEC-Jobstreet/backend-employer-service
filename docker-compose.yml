@@ -11,7 +11,7 @@ services:
     volumes:
       - employer-service-prod-data-volume:/var/lib/postgresql/data
     networks:
-      - employer-network
+      - jobstreet-network
     ports:
       - 5432:5432
     user: postgres
@@ -27,16 +27,16 @@ services:
       - HOST=0.0.0.0
       - DB_SOURCE=postgresql://admin:admin@postgres:5432/employer_service_jobstreet?sslmode=disable
     ports:
-      - 4000:4000
+      - 4001:4001
     depends_on:
       - postgres
     networks:
-      - employer-network
+      - jobstreet-network
     restart: on-failure
     command: [ "/app/main" ]
 
 networks:
-  employer-network:
+  jobstreet-network:
 
 volumes:
   employer-service-prod-data-volume:
