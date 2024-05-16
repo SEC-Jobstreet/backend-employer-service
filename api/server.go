@@ -5,25 +5,25 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/SEC-Jobstreet/backend-employer-service/repository"
 	"github.com/SEC-Jobstreet/backend-employer-service/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
-	"gorm.io/gorm"
 )
 
 // Server serves HTTP requests for our banking service.
 type Server struct {
 	config utils.Config
-	store  *gorm.DB
+	stores *repository.EmployerRepo
 	router *gin.Engine
 }
 
 // NewServer creates a new HTTP server and setup routing.
-func NewServer(config utils.Config, store *gorm.DB) (*Server, error) {
+func NewServer(config utils.Config, stores *repository.EmployerRepo) (*Server, error) {
 	server := &Server{
 		config: config,
-		store:  store,
+		stores: stores,
 	}
 
 	server.setupRouter()

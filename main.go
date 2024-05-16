@@ -2,20 +2,17 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/SEC-Jobstreet/backend-employer-service/api"
 	_ "github.com/SEC-Jobstreet/backend-employer-service/docs"
-	"github.com/SEC-Jobstreet/backend-employer-service/models"
+	"github.com/SEC-Jobstreet/backend-employer-service/repository"
 	"github.com/SEC-Jobstreet/backend-employer-service/utils"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 //	@title			employer Service API
@@ -37,26 +34,33 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	sqlDB, err := sql.Open("pgx", config.DBSource)
-	if err != nil {
-		log.Fatal().Msg("cannot connect to db")
-	}
 
-	store, err := gorm.Open(postgres.New(postgres.Config{
-		Conn: sqlDB,
-	}), &gorm.Config{})
-	if err != nil {
-		log.Fatal().Msg("cannot connect to db")
-	}
+	// sqlDB, err := sql.Open("pgx", config.DBSource)
+	// if err != nil {
+	// 	log.Fatal().Msg("cannot connect to db")
+	// }
 
-	err = models.MigrateEnterprises(store)
-	if err != nil {
-		log.Fatal().Msg("could not migrate db")
+	// store, err := gorm.Open(postgres.New(postgres.Config{
+	// 	Conn: sqlDB,
+	// }), &gorm.Config{})
+	// if err != nil {
+	// 	log.Fatal().Msg("cannot connect to db")
+	// }
+
+	// err = models.MigrateEnterprises(store)
+	// if err != nil {
+	// 	log.Fatal().Msg("could not migrate db")
+	// }
+	DBConnections := []string{
+		"postgresql://admin:admin@34.126.133.75:5432/employer_service_jobstreet?sslmode=disable",
+		"postgresql://admin:admin@3.106.126.218:5432/employer_service_jobstreet?sslmode=disable",
+		"postgresql://admin:admin@34.124.137.133:5432/employer_service_jobstreet?sslmode=disable",
 	}
+	stores := repository.NewEmployerRepo(DBConnections)
 
 	waitGroup, ctx := errgroup.WithContext(ctx)
 
-	runGinServer(ctx, waitGroup, config, store)
+	runGinServer(ctx, waitGroup, config, stores)
 
 	err = waitGroup.Wait()
 	if err != nil {
@@ -64,8 +68,8 @@ func main() {
 	}
 }
 
-func runGinServer(ctx context.Context, waitGroup *errgroup.Group, config utils.Config, store *gorm.DB) {
-	ginServer, err := api.NewServer(config, store)
+func runGinServer(ctx context.Context, waitGroup *errgroup.Group, config utils.Config, stores *repository.EmployerRepo) {
+	ginServer, err := api.NewServer(config, stores)
 	if err != nil {
 		log.Fatal().Msg("cannot create server")
 	}

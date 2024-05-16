@@ -57,7 +57,7 @@ func (s *Server) CreateEnterprise(ctx *gin.Context) {
 		EmployerID:   request.EmployerId,
 		EmployerRole: request.EmployerRole,
 	}
-	s.store.Create(enterprise)
+	s.stores.Create(enterprise)
 
 	ctx.JSON(http.StatusOK, enterprise)
 }
@@ -69,9 +69,17 @@ func (s *Server) GetEnterpriseByEmployer(ctx *gin.Context) {
 		return
 	}
 
-	enterprises := &[]models.Enterprises{}
+	id, err := uuid.Parse(currentUser.Username)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
 
-	s.store.Where("employer_id = ?", currentUser.Username).Find(enterprises)
+	enterprises, err := s.stores.FindByEmployerId(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
 
 	ctx.JSON(http.StatusOK, enterprises)
 }
@@ -93,9 +101,11 @@ func (s *Server) GetEnterpriseByID(ctx *gin.Context) {
 		return
 	}
 
-	enterprise := &models.Enterprises{}
-
-	s.store.Where("id = ?", id).Find(enterprise)
+	enterprise, err := s.stores.FindById(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
 
 	ctx.JSON(http.StatusOK, enterprise)
 }

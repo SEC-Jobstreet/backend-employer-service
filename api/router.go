@@ -24,11 +24,12 @@ func (s *Server) setupRouter() {
 	}))
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.GET("/healthcheck", s.example)
 
 	authRoutes := router.Group("/api/v1")
 
-	authRoutes.POST("/create_enterprise", 
-		// middleware.AuthMiddleware(s.config, []string{}), 
+	authRoutes.POST("/create_enterprise",
+		// middleware.AuthMiddleware(s.config, []string{}),
 		s.CreateEnterprise)
 
 	authRoutes.GET("/get_enterprise_by_employer", middleware.AuthMiddleware(s.config, []string{"employers"}), s.GetEnterpriseByEmployer)
