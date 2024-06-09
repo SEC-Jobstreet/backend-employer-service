@@ -58,13 +58,19 @@ jobs:
     - name: Run remove docker container backend-employer-service
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_SERVER_USERNAME }}@${{ secrets.REMOTE_SERVER_ADDRESS }} << 'ENDSSH'
-        docker stop backend-jobstreet-employer-service-prod
-        docker rm -f backend-jobstreet-employer-service-prod
+        docker stop backend-jobstreet-employer-service-prod backend-jobstreet-employer-service-prod-1 backend-jobstreet-employer-service-prod-2 backend-jobstreet-employer-service-prod-3
+        docker rm -f backend-jobstreet-employer-service-prod backend-jobstreet-employer-service-prod-1 backend-jobstreet-employer-service-prod-2 backend-jobstreet-employer-service-prod-3
         docker rmi -f nguyenthuanit265/backend-employer-service:latest
         ENDSSH
-        
+
+      # docker run --name backend-jobstreet-employer-service-prod --network jobstreet-network -p 4001:4001 -e DB_SOURCE="postgresql://${{secrets.POSTGRES_USER_DB_EMPLOYER}}:${{secrets.POSTGRES_PASSWORD_DB_EMPLOYER}}@${{secrets.REMOTE_SERVER_ADDRESS}}:5432/employer_service_jobstreet?sslmode=disable" -d nguyenthuanit265/backend-employer-service:latest
+      # docker run --name backend-jobstreet-employer-service-prod-1 --network jobstreet-network -p 5001:4001 -e CONTAINER_ID=Container-1 -e DB_SOURCE="postgresql://admin:admin@postgres:5432/employer_service_jobstreet?sslmode=disable" -d nguyenthuanit265/backend-employer-service:latest
+      # docker run --name backend-jobstreet-employer-service-prod-2 --network jobstreet-network -p 5002:4001 -e CONTAINER_ID=Container-2 -e DB_SOURCE="postgresql://admin:admin@postgres:5432/employer_service_jobstreet?sslmode=disable" -d nguyenthuanit265/backend-employer-service:latest
+      # docker run --name backend-jobstreet-employer-service-prod-3 --network jobstreet-network -p 5003:4001 -e CONTAINER_ID=Container-3 -e DB_SOURCE="postgresql://admin:admin@postgres:5432/employer_service_jobstreet?sslmode=disable" -d nguyenthuanit265/backend-employer-service:latest
     - name: Run docker container backend-employer-service
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_SERVER_USERNAME }}@${{ secrets.REMOTE_SERVER_ADDRESS }} << 'ENDSSH'
-        docker run --name backend-jobstreet-employer-service-prod --network jobstreet-network -p 4001:4001 -e DB_SOURCE="postgresql://${{secrets.POSTGRES_USER_DB_EMPLOYER}}:${{secrets.POSTGRES_PASSWORD_DB_EMPLOYER}}@${{secrets.REMOTE_SERVER_ADDRESS}}:5432/employer_service_jobstreet?sslmode=disable" -d nguyenthuanit265/backend-employer-service:latest
+        docker run --name backend-jobstreet-employer-service-prod-1 --network jobstreet-network -p 5001:4001 -e DB_SOURCE="postgresql://${{secrets.POSTGRES_USER_DB_EMPLOYER}}:${{secrets.POSTGRES_PASSWORD_DB_EMPLOYER}}@${{secrets.REMOTE_SERVER_ADDRESS}}:5432/employer_service_jobstreet?sslmode=disable" -e CONTAINER_ID=Container-1 -d nguyenthuanit265/backend-employer-service:latest
+        docker run --name backend-jobstreet-employer-service-prod-2 --network jobstreet-network -p 5002:4001 -e DB_SOURCE="postgresql://${{secrets.POSTGRES_USER_DB_EMPLOYER}}:${{secrets.POSTGRES_PASSWORD_DB_EMPLOYER}}@${{secrets.REMOTE_SERVER_ADDRESS}}:5432/employer_service_jobstreet?sslmode=disable" -e CONTAINER_ID=Container-2 -d nguyenthuanit265/backend-employer-service:latest
+        docker run --name backend-jobstreet-employer-service-prod-3 --network jobstreet-network -p 5003:4001 -e DB_SOURCE="postgresql://${{secrets.POSTGRES_USER_DB_EMPLOYER}}:${{secrets.POSTGRES_PASSWORD_DB_EMPLOYER}}@${{secrets.REMOTE_SERVER_ADDRESS}}:5432/employer_service_jobstreet?sslmode=disable" -e CONTAINER_ID=Container-3 -d nguyenthuanit265/backend-employer-service:latest
         ENDSSH
