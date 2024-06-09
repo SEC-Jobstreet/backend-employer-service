@@ -27,12 +27,16 @@ func (s *Server) setupRouter() {
 
 	authRoutes := router.Group("/api/v1")
 
-	authRoutes.POST("/create_enterprise", 
-		// middleware.AuthMiddleware(s.config, []string{}), 
+	authRoutes.POST("/create_enterprise",
+		// middleware.AuthMiddleware(s.config, []string{}),
 		s.CreateEnterprise)
 
 	authRoutes.GET("/get_enterprise_by_employer", middleware.AuthMiddleware(s.config, []string{"employers"}), s.GetEnterpriseByEmployer)
 	authRoutes.GET("/get_enterprise_by_id/:id", middleware.AuthMiddleware(s.config, []string{"employers"}), s.GetEnterpriseByID)
+
+	// public api
+	apiPublic := router.Group("/api/public")
+	apiPublic.POST("/loadbalance", s.PublicData)
 
 	s.router = router
 }
