@@ -69,7 +69,7 @@ jobs:
       # docker run --name backend-jobstreet-employer-service-prod-3 --network jobstreet-network -p 5003:4001 -e CONTAINER_ID=Container-3 -e DB_SOURCE="postgresql://admin:admin@postgres:5432/employer_service_jobstreet?sslmode=disable" -d nguyenthuanit265/backend-employer-service:latest
     - name: Run docker container backend-employer-service
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_SERVER_USERNAME }}@${{ secrets.REMOTE_SERVER_ADDRESS }} << 'ENDSSH'
+        ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_SERVER_USERNAME }}@${{ secrets.REMOTE_EMPLOYER_SERVER_ADDRESS }} << 'ENDSSH'
         docker run --name backend-jobstreet-employer-service-prod-1 --network jobstreet-network -p 5001:4001 -e ${{ secrets.ENV_BACKEND_EMPLOYER_SERVICE }} -e CONTAINER_ID=Container-1 -d nguyenthuanit265/backend-employer-service:latest
         docker run --name backend-jobstreet-employer-service-prod-2 --network jobstreet-network -p 5002:4001 -e ${{ secrets.ENV_BACKEND_EMPLOYER_SERVICE }} -e CONTAINER_ID=Container-2 -d nguyenthuanit265/backend-employer-service:latest
         docker run --name backend-jobstreet-employer-service-prod-3 --network jobstreet-network -p 5003:4001 -e ${{ secrets.ENV_BACKEND_EMPLOYER_SERVICE }} -e CONTAINER_ID=Container-3 -d nguyenthuanit265/backend-employer-service:latest
