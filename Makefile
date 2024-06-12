@@ -60,4 +60,8 @@ swagger:
 test:
 	go test -v -cover -short ./...
 
+# generate gomock for testing
+mock:
+	mockgen -package mockdb -destination db/mock/store.go github.com/SEC-Jobstreet/backend-employer-service/db/sqlc Querier
+
 .PHONY: build_run_prod new_migrate run_postgres migrate dropdb createdb start_postgres sqlc evans swagger proto

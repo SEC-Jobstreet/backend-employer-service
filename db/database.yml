@@ -1,0 +1,14 @@
+---
+development:
+  dialect: postgres
+  database: employer_service_jobstreet
+  user: admin
+  password: admin
+  host: 127.0.0.1
+  pool: 5
+
+test:
+  url: {{envOr "DB_SOURCE" "postgresql://admin:admin@postgres:5432/employer_service_jobstreet?sslmode=disable"}}
+
+production:
+  url: {{envOr "DB_SOURCE" "postgresql://admin:admin@postgres:5432/employer_service_jobstreet?sslmode=disable"}}

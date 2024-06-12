@@ -2,20 +2,21 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/SEC-Jobstreet/backend-employer-service/api"
+	db "github.com/SEC-Jobstreet/backend-employer-service/db/sqlc"
 	_ "github.com/SEC-Jobstreet/backend-employer-service/docs"
-	"github.com/SEC-Jobstreet/backend-employer-service/models"
 	"github.com/SEC-Jobstreet/backend-employer-service/utils"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 //	@title			employer Service API
@@ -37,22 +38,15 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	sqlDB, err := sql.Open("pgx", config.DBSource)
+
+	connPool, err := pgxpool.New(ctx, config.DBSource)
 	if err != nil {
-		log.Fatal().Msg("cannot connect to db")
+		log.Fatal().Err(err).Msg("cannot connect to db")
 	}
 
-	store, err := gorm.Open(postgres.New(postgres.Config{
-		Conn: sqlDB,
-	}), &gorm.Config{})
-	if err != nil {
-		log.Fatal().Msg("cannot connect to db")
-	}
+	runDBMigration(config.MigrationURL, config.DBSource)
 
-	err = models.MigrateEnterprises(store)
-	if err != nil {
-		log.Fatal().Msg("could not migrate db")
-	}
+	store := db.New(connPool)
 
 	waitGroup, ctx := errgroup.WithContext(ctx)
 
@@ -64,7 +58,7 @@ func main() {
 	}
 }
 
-func runGinServer(ctx context.Context, waitGroup *errgroup.Group, config utils.Config, store *gorm.DB) {
+func runGinServer(ctx context.Context, waitGroup *errgroup.Group, config utils.Config, store *db.Queries) {
 	ginServer, err := api.NewServer(config, store)
 	if err != nil {
 		log.Fatal().Msg("cannot create server")
@@ -74,4 +68,17 @@ func runGinServer(ctx context.Context, waitGroup *errgroup.Group, config utils.C
 	if err != nil {
 		log.Fatal().Msg("cannot start server")
 	}
+}
+
+func runDBMigration(migrationURL string, dbSource string) {
+	migration, err := migrate.New(migrationURL, dbSource)
+	if err != nil {
+		log.Fatal().Err(err).Msg("cannot create new migrate instance")
+	}
+
+	if err = migration.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatal().Err(err).Msg("failed to run migrate up")
+	}
+
+	log.Info().Msg("db migrated successfully")
 }

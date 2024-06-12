@@ -3,10 +3,11 @@ package api
 import (
 	"net/http"
 
-	"github.com/SEC-Jobstreet/backend-employer-service/models"
+	db "github.com/SEC-Jobstreet/backend-employer-service/db/sqlc"
 	"github.com/SEC-Jobstreet/backend-employer-service/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type enterpriseCreationRequest struct {
@@ -50,23 +51,145 @@ func (s *Server) CreateEnterprise(ctx *gin.Context) {
 		enterpriseId = id
 	}
 
-	enterprise := &models.Enterprises{
-		ID:        enterpriseId,
-		Name:      request.Name,
-		Country:   request.Country,
-		Address:   request.Address,
-		Latitude:  request.Latitude,
-		Longitude: request.Longitude,
-		Field:     request.Field,
-		Size:      request.Size,
-		Url:       request.Url,
+	enterprise := db.CreateEnterpriseParams{
+		ID: enterpriseId,
+		Name: pgtype.Text{
+			String: request.Name,
+			Valid:  request.Name != "",
+		},
+		Country: pgtype.Text{
+			String: request.Country,
+			Valid:  request.Country != "",
+		},
+		Address: pgtype.Text{
+			String: request.Address,
+			Valid:  request.Address != "",
+		},
+		Latitude: pgtype.Text{
+			String: request.Latitude,
+			Valid:  request.Latitude != "",
+		},
+		Longitude: pgtype.Text{
+			String: request.Longitude,
+			Valid:  request.Longitude != "",
+		},
+		Field: pgtype.Text{
+			String: request.Field,
+			Valid:  request.Field != "",
+		},
+		Size: pgtype.Text{
+			String: request.Size,
+			Valid:  request.Size != "",
+		},
+		Url: pgtype.Text{
+			String: request.Url,
+			Valid:  request.Url != "",
+		},
 
-		EmployerID:   request.EmployerId,
-		EmployerRole: request.EmployerRole,
+		EmployerID: pgtype.Text{
+			String: request.EmployerId,
+			Valid:  request.EmployerId != "",
+		},
+		EmployerRole: pgtype.Text{
+			String: request.EmployerRole,
+			Valid:  request.EmployerRole != "",
+		},
 	}
-	s.store.Create(enterprise)
 
-	ctx.JSON(http.StatusOK, enterprise)
+	res, err := s.store.CreateEnterprise(ctx, enterprise)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+type enterpriseUpdatingRequest struct {
+	Id        string `json:"id" binding:"required"`
+	Name      string `json:"name" binding:"required"`
+	Country   string `json:"country" binding:"required"`
+	Address   string `json:"address" binding:"required"`
+	Latitude  string `json:"latitude"`
+	Longitude string `json:"longitude"`
+	Field     string `json:"field" binding:"required"`
+	Size      string `json:"size" binding:"required"`
+	Url       string `json:"url"`
+	License   string `json:"license"`
+
+	EmployerRole string `json:"employer_role"`
+}
+
+func (s *Server) UpdateEnterprise(ctx *gin.Context) {
+	currentUser, err := utils.GetCurrentUser(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	var request enterpriseUpdatingRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	enterpriseId, err := uuid.Parse(request.Id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	enterprise := db.UpdateEnterpriseParams{
+		ID: enterpriseId,
+		EmployerID: pgtype.Text{
+			String: currentUser.Username,
+			Valid:  true,
+		},
+		Name: pgtype.Text{
+			String: request.Name,
+			Valid:  request.Name != "",
+		},
+		Country: pgtype.Text{
+			String: request.Country,
+			Valid:  request.Country != "",
+		},
+		Address: pgtype.Text{
+			String: request.Address,
+			Valid:  request.Address != "",
+		},
+		Latitude: pgtype.Text{
+			String: request.Latitude,
+			Valid:  request.Latitude != "",
+		},
+		Longitude: pgtype.Text{
+			String: request.Longitude,
+			Valid:  request.Longitude != "",
+		},
+		Field: pgtype.Text{
+			String: request.Field,
+			Valid:  request.Field != "",
+		},
+		Size: pgtype.Text{
+			String: request.Size,
+			Valid:  request.Size != "",
+		},
+		Url: pgtype.Text{
+			String: request.Url,
+			Valid:  request.Url != "",
+		},
+		EmployerRole: pgtype.Text{
+			String: request.EmployerRole,
+			Valid:  request.EmployerRole != "",
+		},
+	}
+
+	res, err := s.store.UpdateEnterprise(ctx, enterprise)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, res)
 }
 
 func (s *Server) GetEnterpriseByEmployer(ctx *gin.Context) {
@@ -76,11 +199,18 @@ func (s *Server) GetEnterpriseByEmployer(ctx *gin.Context) {
 		return
 	}
 
-	enterprises := &[]models.Enterprises{}
+	// enterprises := &[]models.Enterprises{}
+	// s.store.Where("employer_id = ?", currentUser.Username).Find(enterprises)
 
-	s.store.Where("employer_id = ?", currentUser.Username).Find(enterprises)
-
-	ctx.JSON(http.StatusOK, enterprises)
+	res, err := s.store.GetEnterpriseByEmployerId(ctx, pgtype.Text{
+		String: currentUser.Username,
+		Valid:  true,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, res)
 }
 
 type enterpriseIdRequest struct {
@@ -100,9 +230,13 @@ func (s *Server) GetEnterpriseByID(ctx *gin.Context) {
 		return
 	}
 
-	enterprise := &models.Enterprises{}
+	// enterprise := &models.Enterprises{}
+	// s.store.Where("id = ?", id).Find(enterprise)
+	res, err := s.store.GetEnterpriseById(ctx, id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
 
-	s.store.Where("id = ?", id).Find(enterprise)
-
-	ctx.JSON(http.StatusOK, enterprise)
+	ctx.JSON(http.StatusOK, res)
 }

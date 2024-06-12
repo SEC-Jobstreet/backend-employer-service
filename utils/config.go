@@ -8,7 +8,8 @@ import (
 // The value are read by viper from a config file or environment variables.
 type Config struct {
 	Environment          string `mapstructure:"ENVIRONMENT"`
-	RESTfulServerAddress string `mapstructure:"RESTfulServerAddress"`
+	RESTfulServerAddress string `mapstructure:"RESTFULL_SERVER_ADDRESS"`
+	MigrationURL         string `mapstructure:"MIGRATION_URL"`
 	DBSource             string `mapstructure:"DB_SOURCE"`
 	CognitoRegion        string `mapstructure:"COGNITO_REGION"`
 	CognitoUserPoolID    string `mapstructure:"COGNITO_USER_POOL_ID"`
