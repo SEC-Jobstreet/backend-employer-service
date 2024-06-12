@@ -20,6 +20,7 @@ WORKDIR /app
 RUN apk add --no-cache ca-certificates
 # Copy built binary from builder
 COPY --from=builder /app/main .
+COPY db/migration ./db/migration
 
 COPY config.json .
 
