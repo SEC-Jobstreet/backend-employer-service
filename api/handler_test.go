@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 
 	mockdb "github.com/SEC-Jobstreet/backend-employer-service/db/mock"
 	db "github.com/SEC-Jobstreet/backend-employer-service/db/sqlc"
+	"github.com/SEC-Jobstreet/backend-employer-service/models"
 	"github.com/SEC-Jobstreet/backend-employer-service/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -51,6 +53,7 @@ func TestCreateEnterpriseAPI(t *testing.T) {
 					Field:        enterprise.Field,
 					Size:         enterprise.Size,
 					Url:          enterprise.Url,
+					License:      enterprise.License,
 					EmployerID:   enterprise.EmployerID,
 					EmployerRole: enterprise.EmployerRole,
 				}
@@ -63,6 +66,75 @@ func TestCreateEnterpriseAPI(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 				requireBodyMatchEnterprise(t, recorder.Body, enterprise)
+			},
+		},
+		{
+			name: "Missing Required Fields (Name)",
+			body: gin.H{
+				"id":            enterprise.ID,
+				"country":       enterprise.Country.String,
+				"address":       enterprise.Address.String,
+				"field":         enterprise.Field.String,
+				"size":          enterprise.Size.String,
+				"url":           enterprise.Url.String,
+				"license":       enterprise.License.String,
+				"employer_id":   enterprise.EmployerID.String,
+				"employer_role": enterprise.EmployerRole.String,
+			},
+			buildStubs: func(store *mockdb.MockQuerier) {
+				store.EXPECT().
+					CreateEnterprise(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Invalid UUID Format",
+			body: gin.H{
+				"id":            "test",
+				"name":          enterprise.Name.String,
+				"country":       enterprise.Country.String,
+				"address":       enterprise.Address.String,
+				"field":         enterprise.Field.String,
+				"size":          enterprise.Size.String,
+				"url":           enterprise.Url.String,
+				"license":       enterprise.License.String,
+				"employer_id":   enterprise.EmployerID.String,
+				"employer_role": enterprise.EmployerRole.String,
+			},
+			buildStubs: func(store *mockdb.MockQuerier) {
+				store.EXPECT().
+					CreateEnterprise(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Error Creating Enterprise in DB",
+			body: gin.H{
+				"id":            enterprise.ID,
+				"name":          enterprise.Name.String,
+				"country":       enterprise.Country.String,
+				"address":       enterprise.Address.String,
+				"field":         enterprise.Field.String,
+				"size":          enterprise.Size.String,
+				"url":           enterprise.Url.String,
+				"license":       enterprise.License.String,
+				"employer_id":   enterprise.EmployerID.String,
+				"employer_role": enterprise.EmployerRole.String,
+			},
+			buildStubs: func(store *mockdb.MockQuerier) {
+				store.EXPECT().
+					CreateEnterprise(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.Enterprise{}, sql.ErrConnDone)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
 		},
 	}
@@ -90,6 +162,95 @@ func TestCreateEnterpriseAPI(t *testing.T) {
 
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestUpdateEnterprise(t *testing.T) {
+	enterprise := RandomEnterprise()
+	employerID := enterprise.EmployerID
+
+	testCases := []struct {
+		name          string
+		body          gin.H
+		setupAuth     func(t *testing.T, ctx *gin.Context)
+		buildStubs    func(store *mockdb.MockQuerier)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "Valid Enterprise Updating Request",
+			body: gin.H{
+				"id":            enterprise.ID,
+				"name":          enterprise.Name.String,
+				"country":       enterprise.Country.String,
+				"address":       enterprise.Address.String,
+				"field":         enterprise.Field.String,
+				"size":          enterprise.Size.String,
+				"url":           enterprise.Url.String,
+				"license":       enterprise.License.String,
+				"employer_role": enterprise.EmployerRole.String,
+			},
+			setupAuth: func(t *testing.T, ctx *gin.Context) {
+				ctx.Set(utils.AuthorizationPayloadKey, models.AuthClaim{
+					Username: employerID.String,
+				})
+			},
+			buildStubs: func(store *mockdb.MockQuerier) {
+				arg := db.UpdateEnterpriseParams{
+					ID:           enterprise.ID,
+					Name:         enterprise.Name,
+					Country:      enterprise.Country,
+					Address:      enterprise.Address,
+					Field:        enterprise.Field,
+					Size:         enterprise.Size,
+					Url:          enterprise.Url,
+					License:      enterprise.License,
+					EmployerID:   employerID,
+					EmployerRole: enterprise.EmployerRole,
+				}
+
+				store.EXPECT().
+					UpdateEnterprise(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(enterprise, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			store := mockdb.NewMockQuerier(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+
+			ctx.Request = &http.Request{
+				Header: make(http.Header),
+			}
+
+			ctx.Request.Method = "POST"
+			ctx.Request.Header.Set("Content-Type", "application/json")
+
+			tc.setupAuth(t, ctx)
+
+			ctx.Request.Body = io.NopCloser(bytes.NewBuffer(data))
+			server.UpdateEnterprise(ctx)
+			tc.checkResponse(w)
 		})
 	}
 }
@@ -131,7 +292,10 @@ func RandomEnterprise() db.Enterprise {
 			String: utils.RandomString(10),
 			Valid:  true,
 		},
-
+		License: pgtype.Text{
+			String: utils.RandomString(10),
+			Valid:  true,
+		},
 		EmployerID: pgtype.Text{
 			String: uuid.New().String(),
 			Valid:  true,

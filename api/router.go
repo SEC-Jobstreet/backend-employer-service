@@ -29,7 +29,7 @@ func (s *Server) setupRouter() {
 
 	authRoutes.POST("/create_enterprise", s.CreateEnterprise)
 	authRoutes.POST("/update_enterprise",
-		middleware.AuthMiddleware(s.config, []string{"employer"}),
+		middleware.AuthMiddleware(s.config, []string{"employers"}),
 		s.UpdateEnterprise)
 
 	authRoutes.GET("/get_enterprise_by_employer", middleware.AuthMiddleware(s.config, []string{"employers", "admin"}), s.GetEnterpriseByEmployer)

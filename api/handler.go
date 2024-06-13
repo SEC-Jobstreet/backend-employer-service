@@ -85,7 +85,10 @@ func (s *Server) CreateEnterprise(ctx *gin.Context) {
 			String: request.Url,
 			Valid:  request.Url != "",
 		},
-
+		License: pgtype.Text{
+			String: request.License,
+			Valid:  request.License != "",
+		},
 		EmployerID: pgtype.Text{
 			String: request.EmployerId,
 			Valid:  request.EmployerId != "",
@@ -177,6 +180,10 @@ func (s *Server) UpdateEnterprise(ctx *gin.Context) {
 			String: request.Url,
 			Valid:  request.Url != "",
 		},
+		License: pgtype.Text{
+			String: request.License,
+			Valid:  request.License != "",
+		},
 		EmployerRole: pgtype.Text{
 			String: request.EmployerRole,
 			Valid:  request.EmployerRole != "",
@@ -198,9 +205,6 @@ func (s *Server) GetEnterpriseByEmployer(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
 		return
 	}
-
-	// enterprises := &[]models.Enterprises{}
-	// s.store.Where("employer_id = ?", currentUser.Username).Find(enterprises)
 
 	res, err := s.store.GetEnterpriseByEmployerId(ctx, pgtype.Text{
 		String: currentUser.Username,
@@ -230,8 +234,6 @@ func (s *Server) GetEnterpriseByID(ctx *gin.Context) {
 		return
 	}
 
-	// enterprise := &models.Enterprises{}
-	// s.store.Where("id = ?", id).Find(enterprise)
 	res, err := s.store.GetEnterpriseById(ctx, id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
