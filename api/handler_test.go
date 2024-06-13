@@ -218,6 +218,111 @@ func TestUpdateEnterprise(t *testing.T) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
 		},
+		{
+			name: "Missing Required Fields",
+			body: gin.H{
+				"name":          enterprise.Name.String,
+				"country":       enterprise.Country.String,
+				"address":       enterprise.Address.String,
+				"field":         enterprise.Field.String,
+				"size":          enterprise.Size.String,
+				"url":           enterprise.Url.String,
+				"license":       enterprise.License.String,
+				"employer_role": enterprise.EmployerRole.String,
+			},
+			setupAuth: func(t *testing.T, ctx *gin.Context) {
+				ctx.Set(utils.AuthorizationPayloadKey, models.AuthClaim{
+					Username: employerID.String,
+				})
+			},
+			buildStubs: func(store *mockdb.MockQuerier) {
+				store.EXPECT().
+					UpdateEnterprise(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "UnAuthorize Request",
+			body: gin.H{
+				"id":            enterprise.ID,
+				"name":          enterprise.Name.String,
+				"country":       enterprise.Country.String,
+				"address":       enterprise.Address.String,
+				"field":         enterprise.Field.String,
+				"size":          enterprise.Size.String,
+				"url":           enterprise.Url.String,
+				"license":       enterprise.License.String,
+				"employer_role": enterprise.EmployerRole.String,
+			},
+			setupAuth: func(t *testing.T, ctx *gin.Context) {
+			},
+			buildStubs: func(store *mockdb.MockQuerier) {
+				store.EXPECT().
+					UpdateEnterprise(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Invalid UUID Format",
+			body: gin.H{
+				"id":            "213123123",
+				"name":          enterprise.Name.String,
+				"country":       enterprise.Country.String,
+				"address":       enterprise.Address.String,
+				"field":         enterprise.Field.String,
+				"size":          enterprise.Size.String,
+				"url":           enterprise.Url.String,
+				"license":       enterprise.License.String,
+				"employer_role": enterprise.EmployerRole.String,
+			},
+			setupAuth: func(t *testing.T, ctx *gin.Context) {
+				ctx.Set(utils.AuthorizationPayloadKey, models.AuthClaim{
+					Username: employerID.String,
+				})
+			},
+			buildStubs: func(store *mockdb.MockQuerier) {
+				store.EXPECT().
+					UpdateEnterprise(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Error Updating Enterprise in Store",
+			body: gin.H{
+				"id":            enterprise.ID,
+				"name":          enterprise.Name.String,
+				"country":       enterprise.Country.String,
+				"address":       enterprise.Address.String,
+				"field":         enterprise.Field.String,
+				"size":          enterprise.Size.String,
+				"url":           enterprise.Url.String,
+				"license":       enterprise.License.String,
+				"employer_role": enterprise.EmployerRole.String,
+			},
+			setupAuth: func(t *testing.T, ctx *gin.Context) {
+				ctx.Set(utils.AuthorizationPayloadKey, models.AuthClaim{
+					Username: employerID.String,
+				})
+			},
+			buildStubs: func(store *mockdb.MockQuerier) {
+				store.EXPECT().
+					UpdateEnterprise(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.Enterprise{}, sql.ErrConnDone)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
 	}
 
 	for i := range testCases {

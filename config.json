@@ -2,7 +2,7 @@
     "ENVIRONMENT": "development",
     "RESTFULL_SERVER_ADDRESS": "0.0.0.0:4001",
     "MIGRATION_URL": "file://db/migration",
-    "DB_SOURCE": "a",
-    "COGNITO_REGION": "ap-a-a",
-    "COGNITO_USER_POOL_ID": "ap-a-a"
+    "DB_SOURCE": "postgresql://admin:admin@34.142.156.221:5432/employer_service_jobstreet?sslmode=disable",
+    "COGNITO_REGION": "ap-southeast-2",
+    "COGNITO_USER_POOL_ID": "ap-southeast-2_04kZn9D5s"
 }
