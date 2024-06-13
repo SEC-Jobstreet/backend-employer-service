@@ -61,6 +61,7 @@ jobs:
         docker stop backend-jobstreet-employer-service-prod-1 backend-jobstreet-employer-service-prod-2 backend-jobstreet-employer-service-prod-3
         docker rm -f backend-jobstreet-employer-service-prod-1 backend-jobstreet-employer-service-prod-2 backend-jobstreet-employer-service-prod-3
         docker rmi -f nguyenthuanit265/backend-employer-service:latest
+        docker image pull nguyenthuanit265/backend-employer-service:latest
         ENDSSH
 
       # docker run --name backend-jobstreet-employer-service-prod --network jobstreet-network -p 4001:4001 -e DB_SOURCE="postgresql://${{secrets.POSTGRES_USER_DB_EMPLOYER}}:${{secrets.POSTGRES_PASSWORD_DB_EMPLOYER}}@${{secrets.REMOTE_SERVER_ADDRESS}}:5432/employer_service_jobstreet?sslmode=disable" -d nguyenthuanit265/backend-employer-service:latest
